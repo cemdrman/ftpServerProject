@@ -1,4 +1,4 @@
-package ftpserverproject;
+package serverPackage;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import clientPackage.*;
 
 /**
  *
@@ -20,12 +21,19 @@ public class FtpServer {
     private InetAddress address;
     private Socket socket;
     private File file;
-    private String systemPath = System.getProperty("user.home");
+    private final String systemPath = System.getProperty("user.home");
     private final String serverDirectoryPath = systemPath + "\\desktop\\FtpServerDirectory"; //Directory masaüstüne açılması için her pcye uygun şekilde path alıyoruz
-
+    private Client connectedClient;
+    
+    public void stopServer(){
+        serverSocket = null;
+        address = null;
+        socket = null;
+        file = null;
+    }
     public void startServer() {
         try {            
-            file = new File(serverDirectoryPath);            
+            file = new File(serverDirectoryPath);
             address = InetAddress.getByName(serverIp);
             serverSocket = new ServerSocket(serverPort);
             System.out.println("---------FTP-SERVER---------");
@@ -38,29 +46,32 @@ public class FtpServer {
             System.out.println("Server Started...");
             System.out.println("Waiting for connections...");
             makeMainDirectory();//öncelikle ana Directoryi oluşturuyoruz
-            socket = serverSocket.accept();//client bağlanana kadar burda bekler
-            System.out.println("New Client Connected from " + socket.getInetAddress().getHostName() + "...");
+            socket = serverSocket.accept();//client bağlanana kadar burda bekler            
+            System.out.println("New Client Connected from " + socket.getInetAddress().getHostName() + "/" +socket.getPort());
             ServerThread serverThread = new ServerThread(socket);
             serverThread.start();
         } catch (IOException ex) {
             Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
+            stopServer();
         }
     }
 
     private void makeMainDirectory() {
         if (file.exists()) { //böyle bir klasör var mı?
             System.out.println("Directory is allready created!");
-        } else if (file.mkdir()) {
-            System.out.println("Directory is created!");
         } else {
-            System.out.println("Directory is not created!");
+            if (file.mkdir()) {
+                System.out.println("Directory is created!");
+            }else{
+                System.out.println("Directory is not created!");
+            }            
         }
     }
 
-    private void allFileListOnTheServer() {
-        file.listFiles();//ana dir altındaki bütün dosyalar
+    private File[] allFileListOnTheServer() {
+        return file.listFiles();
     }
-
+    
     public int getServerPort() {
         return serverPort;
     }
