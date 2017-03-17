@@ -109,8 +109,8 @@ public class ClientTest extends javax.swing.JFrame {
             String userName = "cem";
             Socket clientSocket = new Socket("localhost", 1907);
             Client client = new Client("cem", password, clientSocket);
-            ClientThread clientThread = new ClientThread(client);
-            clientThread.start();//client içindeki connect metodu çalışır
+            client.connetServer();
+            
         } catch (IOException ex) {
             Logger.getLogger(ClientTest.class.getName()).log(Level.SEVERE, null, ex);
         }
