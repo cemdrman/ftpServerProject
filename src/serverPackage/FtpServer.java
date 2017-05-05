@@ -33,6 +33,7 @@ public class FtpServer {
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
     private ArrayList<Client> connectedClientList = new ArrayList();
+    private boolean isConnected = false;
 
     public ArrayList<Client> getConnectedClientList() {
         return connectedClientList;
@@ -51,6 +52,7 @@ public class FtpServer {
 
     public void startServer() {
         try {
+
             serverFile = new File(serverDirectoryPath);
             address = InetAddress.getByName(serverIp);
             serverSocket = new ServerSocket(serverPort);
@@ -71,6 +73,13 @@ public class FtpServer {
             Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
             stopServer();
         }
+    }
+
+    private void init() throws IOException {
+
+        outputStream = new ObjectOutputStream(connectedSocket.getOutputStream());
+        inputStream = new ObjectInputStream(connectedSocket.getInputStream());
+
     }
 
     private void receiveFileFromClient() {
@@ -96,11 +105,11 @@ public class FtpServer {
         String userDirectoryPath = getMainDirectoryPath().concat("\\").concat(userName);
         File userFile = new File(userDirectoryPath);
         if (userFile.exists()) {
-            System.out.println("User Directory is allready created!");
+            System.out.println("[Log]--> User Directory is allready created!");
         } else if (userFile.mkdir()) {
-            System.out.println("User Directory is created on the " + userDirectoryPath);
+            System.out.println("[Log]--> User Directory is created on the " + userDirectoryPath);
         } else {
-            System.out.println("User Directory is not created!");
+            System.out.println("[Log]--> User Directory is not created!");
         }
     }
 
@@ -141,16 +150,8 @@ public class FtpServer {
         return serverDirectoryPath;
     }
 
-    protected void sendMessage(String message) {
-
-        try {
-            inputStream = new ObjectInputStream(connectedSocket.getInputStream());
-            outputStream = new ObjectOutputStream(connectedSocket.getOutputStream());
-            outputStream.writeObject(message);
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+    protected void sendMessage(String message) throws IOException {
+        outputStream.writeObject(message);
     }
 
     class ServerThread extends Thread {
@@ -160,14 +161,30 @@ public class FtpServer {
 
             while (!serverSocket.isClosed()) {
                 try {
-                     
-                    connectedSocket = serverSocket.accept();//client bağlanana kadar burda bekler
-                    System.out.println("[Log]--> Connected from " + connectedSocket.getInetAddress().getHostName() + "/" + connectedSocket.getPort() );
-                    
-                } catch (IOException ex) {
-                    Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+
+                    if (isConnected) {
+                        //bağlı oldugu icin gelen mesaja göre işlem yapılır.
+                    } else {
+                        connectToServer();
+                    }
+                } catch (ClassNotFoundException | IOException ex) {
+                    Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+        }
+
+        private void connectToServer() throws IOException, ClassNotFoundException {
+            connectedSocket = serverSocket.accept();//client bağlanana kadar burda bekler
+            System.out.println("[Log]--> Connected from " + connectedSocket.getInetAddress().getHostName() + "/" + connectedSocket.getPort());
+            init();
+            sendMessage(serverIp);
+            String userName = (String) inputStream.readObject();
+            System.out.println("[Log]--> " + userName + " connected to server");
+            makeUserDirectory(userName);
+        }
+
+        private String readMessageComeFromClient() throws IOException, ClassNotFoundException {
+            return (String) inputStream.readObject();
         }
     }
 
