@@ -8,9 +8,11 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import clientPackage.*;
-import java.io.BufferedReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 /**
@@ -19,16 +21,17 @@ import java.util.ArrayList;
  */
 public class FtpServer {
 
-    private ServerSocket serverSocket;
+    private static ServerSocket serverSocket;
     private String serverIp;
     private final int serverPort = 1907;
     private InetAddress address;
-    private Socket socket;
+    private static Socket connectedSocket;
     private File serverFile;
     private final String systemPath = System.getProperty("user.home");
-    private final String serverDirectoryPath = systemPath + "\\desktop\\FtpServerDirectory"; //Directory masaüstüne açılması için her pcye uygun şekilde path alıyoruz
-    private static Client connectedClient;
+    private final String serverDirectoryPath = systemPath + "\\desktop\\FtpServerDirectory"; //Directory masaüstüne açılması için her pcye uygun şekilde path alıyoruz    
     private static ServerThread serverThread;
+    private ObjectInputStream inputStream;
+    private ObjectOutputStream outputStream;
     private ArrayList<Client> connectedClientList = new ArrayList();
 
     public ArrayList<Client> getConnectedClientList() {
@@ -42,7 +45,7 @@ public class FtpServer {
     public void stopServer() {
         serverSocket = null;
         address = null;
-        socket = null;
+        connectedSocket = null;
         serverFile = null;
     }
 
@@ -88,8 +91,8 @@ public class FtpServer {
         }
     }
 
-    private void makeUserDirectory() {
-        String userName = connectedClient.getUserName();
+    private void makeUserDirectory(String userName) {
+        //String userName = connectedClient.getUserName();
         String userDirectoryPath = getMainDirectoryPath().concat("\\").concat(userName);
         File userFile = new File(userDirectoryPath);
         if (userFile.exists()) {
@@ -98,6 +101,20 @@ public class FtpServer {
             System.out.println("User Directory is created on the " + userDirectoryPath);
         } else {
             System.out.println("User Directory is not created!");
+        }
+    }
+
+    public void uploadFile(Client c, File f) {
+        makeUserDirectory(c.getUserName());
+        try {
+            FileInputStream fileInputStream = new FileInputStream(f);
+            DataOutputStream dataOutputStream = new DataOutputStream(connectedSocket.getOutputStream());
+
+            dataOutputStream.write(fileInputStream.read());
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -124,16 +141,29 @@ public class FtpServer {
         return serverDirectoryPath;
     }
 
-    class ServerThread extends Thread {
+    protected void sendMessage(String message) {
 
-        private Socket socket;
+        try {
+            inputStream = new ObjectInputStream(connectedSocket.getInputStream());
+            outputStream = new ObjectOutputStream(connectedSocket.getOutputStream());
+            outputStream.writeObject(message);
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    class ServerThread extends Thread {
 
         @Override
         public void run() {
+
             while (!serverSocket.isClosed()) {
                 try {
-                    socket = serverSocket.accept();//client bağlanana kadar burda bekler
-                    System.out.println("Connected from " + socket.getInetAddress().getHostName() + "/" + socket.getPort());
+                     
+                    connectedSocket = serverSocket.accept();//client bağlanana kadar burda bekler
+                    System.out.println("[Log]--> Connected from " + connectedSocket.getInetAddress().getHostName() + "/" + connectedSocket.getPort() );
+                    
                 } catch (IOException ex) {
                     Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
                 }

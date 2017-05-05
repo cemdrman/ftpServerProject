@@ -1,10 +1,6 @@
 package clientPackage;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 
 /**
@@ -13,10 +9,10 @@ import javax.swing.JFileChooser;
  */
 public class ClientTest extends javax.swing.JFrame {
 
-    /**
-     * Creates new form ClientTest
-     */
-    public ClientTest() {
+    private Client client;
+
+    public ClientTest() { 
+        client = new Client();
         initComponents();
     }
 
@@ -97,23 +93,18 @@ public class ClientTest extends javax.swing.JFrame {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
         int result = fileChooser.showOpenDialog(this);
+        File selectedFile = null;
         if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
+            selectedFile = fileChooser.getSelectedFile();
             System.out.println("Selected file: " + selectedFile.getAbsolutePath());
         }
+        client.uploadFileToServer(selectedFile);
     }//GEN-LAST:event_btnYukleActionPerformed
 
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
-        try {
-            int password = 123;
-            String userName = "cem";
-            Socket clientSocket = new Socket("localhost", 1907);
-            Client client = new Client("cem", password, clientSocket);
-            client.connetServer();
-            
-        } catch (IOException ex) {
-            Logger.getLogger(ClientTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
+       
+        client.connetServer();
+
     }//GEN-LAST:event_btnConnectActionPerformed
 
     /**
@@ -145,6 +136,7 @@ public class ClientTest extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new ClientTest().setVisible(true);
             }

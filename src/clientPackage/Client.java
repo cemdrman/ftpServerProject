@@ -1,6 +1,10 @@
 package clientPackage;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -10,18 +14,19 @@ public class Client {
 
     private String userName;
     private int password;
-    private Socket clientSocket;
+    private Socket serverSocket;
     private ClientThread clientThread;
 
-    public Client(String userName, int password, Socket clientSocket) {
-        this.userName = userName;
-        this.password = password;
-        this.clientSocket = clientSocket;
-    }
-
     protected void connetServer() {
-        clientThread = new ClientThread(this);
-        clientThread.start();
+
+        try {
+            serverSocket = new Socket("localhost", 1907);
+            System.out.println("Connection accepted " + serverSocket.getInetAddress() + "/" + serverSocket.getPort());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientTest.class.getName()).log(Level.SEVERE, null, ex);
+            //baglanamadı!
+        }
+
     }
 
     public String getUserName() {
@@ -40,19 +45,19 @@ public class Client {
         this.password = password;
     }
 
-    class ClientThread extends Thread {
-        Client c;
+    protected void sendMessage(String message) {
 
-        public ClientThread(Client c) {
-            this.c = c;
-        }
-        
+    }
+
+    protected void uploadFileToServer(File f) {
+
+    }
+
+    class ClientThread extends Thread {
 
         @Override
         public void run() {
-            if(c.clientSocket.isConnected()){
-                System.out.println("bağnıldı!");
-            }
+
         }
     }
 }
