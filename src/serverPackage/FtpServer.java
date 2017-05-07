@@ -11,6 +11,8 @@ import clientPackage.*;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -34,6 +36,8 @@ public class FtpServer {
     private ObjectOutputStream outputStream;
     private ArrayList<Client> connectedClientList = new ArrayList();
     private boolean isConnected = false;
+    private String userName;
+    private String fileName;
 
     public ArrayList<Client> getConnectedClientList() {
         return connectedClientList;
@@ -52,7 +56,6 @@ public class FtpServer {
 
     public void startServer() {
         try {
-
             serverFile = new File(serverDirectoryPath);
             address = InetAddress.getByName(serverIp);
             serverSocket = new ServerSocket(serverPort);
@@ -76,10 +79,8 @@ public class FtpServer {
     }
 
     private void init() throws IOException {
-
         outputStream = new ObjectOutputStream(connectedSocket.getOutputStream());
         inputStream = new ObjectInputStream(connectedSocket.getInputStream());
-
     }
 
     private void receiveFileFromClient() {
@@ -101,7 +102,6 @@ public class FtpServer {
     }
 
     private void makeUserDirectory(String userName) {
-        //String userName = connectedClient.getUserName();
         String userDirectoryPath = getMainDirectoryPath().concat("\\").concat(userName);
         File userFile = new File(userDirectoryPath);
         if (userFile.exists()) {
@@ -154,16 +154,37 @@ public class FtpServer {
         outputStream.writeObject(message);
     }
 
+    private String readMessage() throws IOException, ClassNotFoundException {
+        return (String) inputStream.readObject();
+    }
+
+    private void saveFile() throws IOException, ClassNotFoundException {
+
+        fileName = readMessage();
+        System.out.println("file name: " + fileName);        
+        int current;
+        FileOutputStream fos = new FileOutputStream(fileName);
+        InputStream in = connectedSocket.getInputStream();
+        try {
+            byte[] bytes = new byte[16 * 1024];
+            while ((current = in.read(bytes)) > 0) {
+                fos.write(bytes, 0, current);
+            }
+        } finally {
+            fos.close();
+            in.close();
+        }
+    }
+
     class ServerThread extends Thread {
 
         @Override
         public void run() {
-
             while (!serverSocket.isClosed()) {
                 try {
-
                     if (isConnected) {
                         //bağlı oldugu icin gelen mesaja göre işlem yapılır.
+                        saveFile();
                     } else {
                         connectToServer();
                     }
@@ -178,14 +199,12 @@ public class FtpServer {
             System.out.println("[Log]--> Connected from " + connectedSocket.getInetAddress().getHostName() + "/" + connectedSocket.getPort());
             init();
             sendMessage(serverIp);
-            String userName = (String) inputStream.readObject();
+            userName = readMessage();
             System.out.println("[Log]--> " + userName + " connected to server");
             makeUserDirectory(userName);
+            isConnected = true;
         }
 
-        private String readMessageComeFromClient() throws IOException, ClassNotFoundException {
-            return (String) inputStream.readObject();
-        }
     }
 
 }
