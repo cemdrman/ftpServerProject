@@ -6,7 +6,7 @@ package serverPackage;
  */
 public class ServerTest {
     public static void main(String[] args) {
-        FtpServer ftpServer = new FtpServer();
+        FtpServer ftpServer = FtpServer.getInstance();
         ftpServer.startServer();
     }
 }
