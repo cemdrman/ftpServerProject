@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  *
@@ -18,21 +19,9 @@ public class Client {
     private String name;
     private String surname;
     private Socket serverSocket;
-    private ClientThread clientThread;
-    private ObjectOutputStream outputStream; 
-      
-    protected void connetServer(String nameSurname) {
-       
-        try {
-            serverSocket = new Socket("localhost", 1907);  
-            outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
-            sendMessage(nameSurname);
-            System.out.println("Connection accepted " + serverSocket.getInetAddress() + "/" + serverSocket.getPort());
-
-        } catch (IOException ex) {
-            Logger.getLogger(FrameGiris.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+    private ObjectOutputStream outputStream;
+    private ObjectInputStream inputStream;
+    private boolean isConnected = false;
 
     protected String getName() {
         return name;
@@ -49,13 +38,18 @@ public class Client {
     protected void setSurname(String surname) {
         this.surname = surname;
     }
-
-    protected void sendMessage(String message) throws IOException {       
-        outputStream.writeObject(message);
-
+    
+    protected boolean getIsConnected() {
+        return isConnected;
     }
     
-    
+    protected void sendMessage(String message) throws IOException {
+        outputStream.writeObject(message);
+    }
+
+    private Object readMessage() throws IOException, ClassNotFoundException {
+        return inputStream.readObject();
+    }
 
     /**
      *
@@ -81,11 +75,37 @@ public class Client {
 
     }
 
-    class ClientThread extends Thread {
+    /**
+     *
+     * @param nameSurname for creating userDir on server side
+     */
+    protected void connetServer(String nameSurname) {
 
-        @Override
-        public void run() {
-
+        try {
+            serverSocket = new Socket("localhost", 1907);
+            outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
+            inputStream = new ObjectInputStream(serverSocket.getInputStream());
+            sendMessage(nameSurname);
+            System.out.println("Connection accepted " + serverSocket.getInetAddress() + "/" + serverSocket.getPort());
+            isConnected = true;
+        } catch (IOException ex) {
+            Logger.getLogger(FrameGiris.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    /**
+     * 
+     * @return gets the clients' file from server
+     */
+    protected ArrayList<String> getFileListFromServer() {
+
+        ArrayList<String> fileList = null;
+        try {
+            sendMessage("getFileList"); //goes to server for which method works
+            fileList = (ArrayList<String>) readMessage();
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return fileList;
     }
 }
