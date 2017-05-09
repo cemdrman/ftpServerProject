@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
@@ -11,15 +12,17 @@ import javax.swing.JOptionPane;
  *
  * @author cem
  */
-
 public class FrameGiris extends javax.swing.JFrame {
 
     private Client client;
+    private DefaultListModel fileListModel;
 
-    public FrameGiris() { 
-        client = new Client();   
+    public FrameGiris() {
+        client = new Client();
+        fileListModel = new DefaultListModel();
         initComponents();
         panelAnasayfa.setVisible(false);
+        this.setTitle("Anasayfa");
     }
 
     /**
@@ -43,6 +46,7 @@ public class FrameGiris extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jList1 = new javax.swing.JList<>();
         btnExit = new javax.swing.JButton();
+        btnDownload = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Giriş");
@@ -56,7 +60,11 @@ public class FrameGiris extends javax.swing.JFrame {
 
         jLabel1.setText("İsim:");
 
+        txtName.setText("cem");
+
         jLabel2.setText("Soyisim:");
+
+        txtSurname.setText("dırman");
 
         javax.swing.GroupLayout panelGirisLayout = new javax.swing.GroupLayout(panelGiris);
         panelGiris.setLayout(panelGirisLayout);
@@ -102,14 +110,16 @@ public class FrameGiris extends javax.swing.JFrame {
             }
         });
 
-        jList1.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
-        });
         jScrollPane1.setViewportView(jList1);
 
         btnExit.setText("Çıkış");
+
+        btnDownload.setText("İndir");
+        btnDownload.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDownloadActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout panelAnasayfaLayout = new javax.swing.GroupLayout(panelAnasayfa);
         panelAnasayfa.setLayout(panelAnasayfaLayout);
@@ -124,7 +134,8 @@ public class FrameGiris extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addGroup(panelAnasayfaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(btnFileUpload, javax.swing.GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE)
-                            .addComponent(btnExit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(btnExit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnDownload, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap(98, Short.MAX_VALUE))
         );
         panelAnasayfaLayout.setVerticalGroup(
@@ -137,6 +148,8 @@ public class FrameGiris extends javax.swing.JFrame {
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
                     .addGroup(panelAnasayfaLayout.createSequentialGroup()
                         .addComponent(btnFileUpload)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnDownload)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnExit)))
                 .addContainerGap())
@@ -173,13 +186,19 @@ public class FrameGiris extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
-        client.setName(txtName.getText());
-        client.setSurname(txtSurname.getText());
-        String nameSurname = client.getName().toUpperCase().concat(" ").concat(client.getSurname().toUpperCase());
-        client.connetServer(nameSurname);
-        panelGiris.setVisible(false);
-        panelAnasayfa.setVisible(true);    
-        lblNameSurname.setText(nameSurname);
+        if (txtName.getText().isEmpty() || txtSurname.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Boş alanları doldurun");
+        } else {
+            client.setName(txtName.getText());
+            client.setSurname(txtSurname.getText());
+            String nameSurname = client.getName().toUpperCase().concat(" ").concat(client.getSurname().toUpperCase());
+            client.connetServer(nameSurname);
+            panelGiris.setVisible(false);
+            panelAnasayfa.setVisible(true);
+            lblNameSurname.setText(nameSurname);
+            getFileList();
+        }
+
     }//GEN-LAST:event_btnConnectActionPerformed
 
     private void btnFileUploadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFileUploadActionPerformed
@@ -191,18 +210,50 @@ public class FrameGiris extends javax.swing.JFrame {
             if (result == JFileChooser.APPROVE_OPTION) {
                 selectedFile = fileChooser.getSelectedFile();
                 System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+                if (selectedFile != null) {
+                    sendFileToServer(selectedFile);
+                   // getFileList();
+                }
             }
-            client.uploadFileToServer(selectedFile);
+
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Beklenmedik Bir Hata Oluştu Lütfen Tekrar Deneyin!");
             Logger.getLogger(FrameGiris.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_btnFileUploadActionPerformed
 
+    private void sendFileToServer(File fileName) throws IOException {
+        client.uploadFileToServer(fileName);
+    }
+
+    private void getFileList() {
+        //removeListModel();
+        for (String name : client.getFileListFromServer()) {
+            fileListModel.addElement(name);
+        }
+        jList1.setModel(fileListModel);
+
+    }
+
+    private void removeListModel() {
+        if (fileListModel.getSize() > 0) {
+            for (int i = 0; i < fileListModel.getSize(); i++) {
+                fileListModel.remove(i);
+            }
+        }
+
+    }
+
+    private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
+
+    }//GEN-LAST:event_btnDownloadActionPerformed
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+
+
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -232,12 +283,14 @@ public class FrameGiris extends javax.swing.JFrame {
             @Override
             public void run() {
                 new FrameGiris().setVisible(true);
+
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnect;
+    private javax.swing.JButton btnDownload;
     private javax.swing.JButton btnExit;
     private javax.swing.JButton btnFileUpload;
     private javax.swing.JLabel jLabel1;

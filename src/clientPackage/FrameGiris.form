@@ -117,6 +117,9 @@
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="txtName">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="cem"/>
+          </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel2">
           <Properties>
@@ -124,6 +127,9 @@
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="txtSurname">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="d&#x131;rman"/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>
@@ -142,6 +148,7 @@
                           <Group type="103" groupAlignment="0" max="-2" attributes="0">
                               <Component id="btnFileUpload" alignment="0" pref="106" max="32767" attributes="0"/>
                               <Component id="btnExit" alignment="0" max="32767" attributes="0"/>
+                              <Component id="btnDownload" alignment="0" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>
@@ -159,6 +166,8 @@
                       <Component id="jScrollPane1" alignment="0" pref="258" max="32767" attributes="0"/>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="btnFileUpload" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                          <Component id="btnDownload" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                           <Component id="btnExit" min="-2" max="-2" attributes="0"/>
                       </Group>
@@ -192,13 +201,7 @@
             <Component class="javax.swing.JList" name="jList1">
               <Properties>
                 <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                  <StringArray count="5">
-                    <StringItem index="0" value="Item 1"/>
-                    <StringItem index="1" value="Item 2"/>
-                    <StringItem index="2" value="Item 3"/>
-                    <StringItem index="3" value="Item 4"/>
-                    <StringItem index="4" value="Item 5"/>
-                  </StringArray>
+                  <StringArray count="0"/>
                 </Property>
               </Properties>
               <AuxValues>
@@ -211,6 +214,14 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="&#xc7;&#x131;k&#x131;&#x15f;"/>
           </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="btnDownload">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="&#x130;ndir"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDownloadActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
