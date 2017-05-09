@@ -108,4 +108,20 @@ public class Client {
         }
         return fileList;
     }
+        
+    /**
+     * 
+     * @param fileName for downloading file from server
+     */
+    protected void downloadFileFromServer(String fileName){
+        try {
+            sendMessage("downloadFile");
+            sendMessage(fileName);
+            //readFile()
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    
 }
