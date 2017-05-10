@@ -1,12 +1,17 @@
 package clientPackage;
 
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.border.Border;
+import javax.swing.text.View;
 
 /**
  *
@@ -47,6 +52,7 @@ public class FrameGiris extends javax.swing.JFrame {
         jList1 = new javax.swing.JList<>();
         btnExit = new javax.swing.JButton();
         btnDownload = new javax.swing.JButton();
+        progressBar = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Giriş");
@@ -113,6 +119,11 @@ public class FrameGiris extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jList1);
 
         btnExit.setText("Çıkış");
+        btnExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExitActionPerformed(evt);
+            }
+        });
 
         btnDownload.setText("İndir");
         btnDownload.addActionListener(new java.awt.event.ActionListener() {
@@ -128,15 +139,19 @@ public class FrameGiris extends javax.swing.JFrame {
             .addGroup(panelAnasayfaLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelAnasayfaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblNameSurname)
+                    .addComponent(progressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(panelAnasayfaLayout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addGroup(panelAnasayfaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(btnFileUpload, javax.swing.GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE)
-                            .addComponent(btnExit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnDownload, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap(98, Short.MAX_VALUE))
+                        .addGroup(panelAnasayfaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblNameSurname)
+                            .addGroup(panelAnasayfaLayout.createSequentialGroup()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addGroup(panelAnasayfaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(btnFileUpload, javax.swing.GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE)
+                                    .addComponent(btnExit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(btnDownload, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(0, 86, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         panelAnasayfaLayout.setVerticalGroup(
             panelAnasayfaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -145,13 +160,15 @@ public class FrameGiris extends javax.swing.JFrame {
                 .addComponent(lblNameSurname)
                 .addGap(18, 18, 18)
                 .addGroup(panelAnasayfaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
                     .addGroup(panelAnasayfaLayout.createSequentialGroup()
                         .addComponent(btnFileUpload)
                         .addGap(18, 18, 18)
                         .addComponent(btnDownload)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnExit)))
+                        .addComponent(btnExit))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 303, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -212,7 +229,6 @@ public class FrameGiris extends javax.swing.JFrame {
                 System.out.println("Selected file: " + selectedFile.getAbsolutePath());
                 if (selectedFile != null) {
                     sendFileToServer(selectedFile);
-                   // getFileList();
                 }
             }
 
@@ -220,6 +236,7 @@ public class FrameGiris extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Beklenmedik Bir Hata Oluştu Lütfen Tekrar Deneyin!");
             Logger.getLogger(FrameGiris.class.getName()).log(Level.SEVERE, null, ex);
         }
+        //getFileList();
     }//GEN-LAST:event_btnFileUploadActionPerformed
 
     private void sendFileToServer(File fileName) throws IOException {
@@ -228,7 +245,8 @@ public class FrameGiris extends javax.swing.JFrame {
 
     private void getFileList() {
         //removeListModel();
-        for (String name : client.getFileListFromServer()) {
+        ArrayList<String> fileList = client.getFileListFromServer();
+        for (String name : fileList) {
             fileListModel.addElement(name);
         }
         jList1.setModel(fileListModel);
@@ -246,7 +264,38 @@ public class FrameGiris extends javax.swing.JFrame {
 
     private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
 
+        int selectedIndex = jList1.getSelectedIndex();
+
+        if (selectedIndex != -1) {
+            client.downloadFileFromServer((String) fileListModel.get(selectedIndex));
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    int i = 0;
+                    
+                    while (i <= 100) {
+                        try {
+                            progressBar.setValue(i++);
+                            Thread.sleep(100);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(FrameGiris.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+
+                }
+            }).start();
+
+        } else {
+            JOptionPane.showMessageDialog(this, "Önce indireceğiniz dosyayı seçin!");
+        }
+       // btnDownload.setVisible(true);
     }//GEN-LAST:event_btnDownloadActionPerformed
+
+    private void btnExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExitActionPerformed
+        client.exit();
+        this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+    }//GEN-LAST:event_btnExitActionPerformed
 
     /**
      * @param args the command line arguments
@@ -300,6 +349,7 @@ public class FrameGiris extends javax.swing.JFrame {
     private javax.swing.JLabel lblNameSurname;
     private javax.swing.JPanel panelAnasayfa;
     private javax.swing.JPanel panelGiris;
+    private javax.swing.JProgressBar progressBar;
     private javax.swing.JTextField txtName;
     private javax.swing.JTextField txtSurname;
     // End of variables declaration//GEN-END:variables

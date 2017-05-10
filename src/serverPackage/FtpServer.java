@@ -8,10 +8,12 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import clientPackage.*;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
@@ -92,7 +94,26 @@ public class FtpServer {
     }
 
     private void sendFileToClient() {
+        try {
+            String fileName = readMessage();
+            File file = new File(getMainDirectoryPath().concat("\\").concat(userName).concat("\\").concat(fileName));
+            byte[] bytes = new byte[(int) file.length()];
 
+            FileInputStream is = new FileInputStream(file);
+            OutputStream out = connectedSocket.getOutputStream();
+            int count;
+            while ((count = is.read(bytes)) > 0) {
+                out.write(bytes, 0, count);
+                break;
+            }
+
+            System.out.println("[Log]--> Sending " + file.getName() + "(" + bytes.length + " bytes)");
+            System.out.println("[Log]--> Done.");
+        } catch (IOException ex) {
+            Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void makeMainDirectory() {
@@ -122,15 +143,14 @@ public class FtpServer {
     }
 
     private ArrayList<String> getClientsFileList() {
-        
+
         File directory = new File(getMainDirectoryPath().concat("\\").concat(userName));
-        
+
         //get all the files from a directory
-        File[] fileList = directory.listFiles();       
+        File[] fileList = directory.listFiles();
         ArrayList<String> fileNameList = new ArrayList<>();
         for (int i = 0; i < fileList.length; i++) {
-            System.out.println(fileList[i].getName());
-            fileNameList.add(fileList[i].getName());            
+            fileNameList.add(fileList[i].getName());
         }
         return fileNameList;
     }
@@ -150,12 +170,20 @@ public class FtpServer {
     private String readMessage() throws IOException, ClassNotFoundException {
         return (String) inputStream.readObject();
     }
+    
+    private void exitClient(){
+        try {
+            connectedSocket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(FtpServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     private void saveFile() throws IOException, ClassNotFoundException {
 
         fileName = readMessage();
         String filePath = getMainDirectoryPath().concat("\\").concat(userName).concat("\\").concat(fileName);
-        System.out.println("file path: " + filePath);
+        System.out.println("[Log]--> saving file: " + filePath);
         int current;
         FileOutputStream fos = new FileOutputStream(filePath);
         InputStream in = connectedSocket.getInputStream();
@@ -187,9 +215,23 @@ public class FtpServer {
                 try {
                     if (isConnected) {  //bağlı oldugu icin gelen mesaja göre işlem yapılır.
                         String message = readMessage();
-                        switch(message){
-                            case "saveFile": saveFile(); break;
-                            case "getFileList": sendMessage(getClientsFileList());  break;
+                        switch (message) {
+                            case "saveFile":
+                                saveFile();
+                                break;
+
+                            case "getFileList":
+                                sendMessage(getClientsFileList());
+                                break;
+
+                            case "downloadFile":
+                                sendFileToClient();
+                                break;
+                                
+                            case "exit":
+                                exitClient();
+                                break;
+
                         }
                     } else {
                         connectToServer();

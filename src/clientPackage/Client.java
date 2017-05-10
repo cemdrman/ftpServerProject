@@ -38,11 +38,11 @@ public class Client {
     protected void setSurname(String surname) {
         this.surname = surname;
     }
-    
+
     protected boolean getIsConnected() {
         return isConnected;
     }
-    
+
     protected void sendMessage(String message) throws IOException {
         outputStream.writeObject(message);
     }
@@ -74,6 +74,14 @@ public class Client {
         System.out.println("Done.");
 
     }
+    
+    protected void exit(){
+        try {
+            sendMessage("exit");            
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     /**
      *
@@ -94,7 +102,7 @@ public class Client {
     }
 
     /**
-     * 
+     *
      * @return gets the clients' file from server
      */
     protected ArrayList<String> getFileListFromServer() {
@@ -108,20 +116,35 @@ public class Client {
         }
         return fileList;
     }
-        
+
     /**
-     * 
+     *
      * @param fileName for downloading file from server
      */
-    protected void downloadFileFromServer(String fileName){
+    protected void downloadFileFromServer(String fileName) {
         try {
             sendMessage("downloadFile");
             sendMessage(fileName);
             //readFile()
+            String home = System.getProperty("user.home");
+            File filePath = new File(home + "/Downloads/" + fileName);
+            System.out.println("file path: " + filePath);
+            int current;
+            FileOutputStream fos = new FileOutputStream(filePath);
+            InputStream in = serverSocket.getInputStream();
+
+            byte[] bytes = new byte[1024 * 1024];
+            while (true) {
+                current = in.read(bytes);
+                fos.write(bytes, 0, current);
+                System.out.println("indirme devam ediyor");
+                break;
+            }
+            System.out.println("indirme bitti");
+            fos.close();
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    
+
 }
